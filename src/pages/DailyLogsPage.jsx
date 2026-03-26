@@ -15,6 +15,19 @@ function DailyLogsPage() {
     fetchDailyLogs()
   }, [])
 
+  useEffect(() => {
+    const resetDailyLogsView = () => {
+      setShowForm(false)
+      setEditingLog(null)
+      setError(null)
+    }
+
+    window.addEventListener('daily-logs:reset-view', resetDailyLogsView)
+    return () => {
+      window.removeEventListener('daily-logs:reset-view', resetDailyLogsView)
+    }
+  }, [])
+
   const fetchDailyLogs = async () => {
     setIsLoading(true)
     setError(null)

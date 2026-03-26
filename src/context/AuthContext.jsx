@@ -47,11 +47,11 @@ export function AuthProvider({ children }) {
     initializeAuth()
   }, [])
 
-  const login = useCallback(async (username, password) => {
+  const login = useCallback(async (identifier, password) => {
     setIsLoading(true)
     setError(null)
     try {
-      const data = await authService.login(username, password)
+      const data = await authService.login(identifier, password)
       const { access, refresh } = data
 
       localStorage.setItem('access_token', access)
@@ -61,7 +61,10 @@ export function AuthProvider({ children }) {
 
       // Login should succeed once token pair is obtained.
       // Fetching /me can fail due to backend auth timing/config; handle it as non-fatal.
-      let user = { username }
+      const isEmailLogin = String(identifier).includes('@')
+      let user = isEmailLogin
+        ? { email: identifier }
+        : { username: identifier }
       try {
         user = await authService.getMe()
       } catch (meError) {

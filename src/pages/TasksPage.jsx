@@ -18,6 +18,21 @@ function TasksPage() {
     fetchTasks()
   }, [])
 
+  useEffect(() => {
+    const resetTasksView = () => {
+      setShowForm(false)
+      setEditingTask(null)
+      setError(null)
+      setDraggedTaskId(null)
+      setDragOverStatus(null)
+    }
+
+    window.addEventListener('tasks:reset-view', resetTasksView)
+    return () => {
+      window.removeEventListener('tasks:reset-view', resetTasksView)
+    }
+  }, [])
+
   const fetchTasks = async () => {
     setIsLoading(true)
     setError(null)
@@ -225,9 +240,6 @@ function TasksPage() {
                       task={task}
                       onEdit={() => setEditingTask(task)}
                       onDelete={() => handleDeleteTask(task.id)}
-                      onStatusChange={(status) =>
-                        handleUpdateTask(task.id, { status })
-                      }
                     />
                   </div>
                 ))

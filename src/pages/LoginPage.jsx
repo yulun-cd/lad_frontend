@@ -4,7 +4,7 @@ import { useAuth } from '../hooks/useAuth'
 import '../styles/auth.css'
 
 function LoginPage() {
-  const [username, setUsername] = useState('')
+  const [identifier, setIdentifier] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const { login, isLoading } = useAuth()
@@ -14,12 +14,12 @@ function LoginPage() {
     e.preventDefault()
     setError('')
 
-    if (!username || !password) {
+    if (!identifier || !password) {
       setError('Please fill in all fields')
       return
     }
 
-    const result = await login(username, password)
+    const result = await login(identifier, password)
     if (result.success) {
       navigate('/tasks')
     } else {
@@ -38,13 +38,13 @@ function LoginPage() {
 
           <form onSubmit={handleSubmit} className="auth-form">
             <div className="form-group">
-              <label htmlFor="username">Username</label>
+              <label htmlFor="identifier">Email or Username</label>
               <input
-                id="username"
+                id="identifier"
                 type="text"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-                placeholder="your_username"
+                value={identifier}
+                onChange={(e) => setIdentifier(e.target.value)}
+                placeholder="you@example.com or your_username"
                 disabled={isLoading}
               />
             </div>

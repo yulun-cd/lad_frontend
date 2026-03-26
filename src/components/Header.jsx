@@ -1,10 +1,18 @@
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 import '../styles/header.css'
 
 export function Header() {
   const { isAuthenticated, currentUser, logout } = useAuth()
+  const location = useLocation()
   const navigate = useNavigate()
+
+  const handleSameRouteClick = (path, eventName) => {
+    if (location.pathname === path) {
+      window.dispatchEvent(new CustomEvent(eventName))
+      window.scrollTo({ top: 0, behavior: 'smooth' })
+    }
+  }
 
   const handleLogout = () => {
     logout()
@@ -21,10 +29,18 @@ export function Header() {
         <nav className="nav">
           {isAuthenticated && (
             <>
-              <Link to="/tasks" className="nav-link">
+              <Link
+                to="/tasks"
+                className="nav-link"
+                onClick={() => handleSameRouteClick('/tasks', 'tasks:reset-view')}
+              >
                 Tasks
               </Link>
-              <Link to="/daily-logs" className="nav-link">
+              <Link
+                to="/daily-logs"
+                className="nav-link"
+                onClick={() => handleSameRouteClick('/daily-logs', 'daily-logs:reset-view')}
+              >
                 Daily Logs
               </Link>
               <Link to="/profile" className="nav-link">
