@@ -63,7 +63,7 @@ export function AuthProvider({ children }) {
       // Fetching /me can fail due to backend auth timing/config; handle it as non-fatal.
       const isEmailLogin = String(identifier).includes('@')
       let user = isEmailLogin
-        ? { email: identifier }
+        ? { email: identifier, username: String(identifier).split('@')[0] || 'User' }
         : { username: identifier }
       try {
         user = await authService.getMe()

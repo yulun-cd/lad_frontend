@@ -5,6 +5,7 @@ import { Header } from './components/Header'
 import { ProtectedRoute } from './components/ProtectedRoute'
 import LoginPage from './pages/LoginPage'
 import RegisterPage from './pages/RegisterPage'
+import HomePage from './pages/HomePage'
 import TasksPage from './pages/TasksPage'
 import DailyLogsPage from './pages/DailyLogsPage'
 import ProfilePage from './pages/ProfilePage'
@@ -18,6 +19,8 @@ function App() {
           <Header />
           <main className="main-content">
             <Routes>
+              <Route path="/" element={<HomePage />} />
+
               {/* Auth routes - will be uncommented once pages are created */}
               <Route path="/login" element={<LoginPage />} />
               <Route path="/register" element={<RegisterPage />} />

@@ -73,7 +73,7 @@ function TaskForm({ task, onSubmit, onCancel }) {
         <h2>{task ? 'Edit Task' : 'Create New Task'}</h2>
 
         <div className="form-group">
-          <label htmlFor="title">Title *</label>
+          <label htmlFor="title">Title</label>
           <input
             id="title"
             type="text"
@@ -116,7 +116,19 @@ function TaskForm({ task, onSubmit, onCancel }) {
           </div>
 
           <div className="form-group">
-            <label htmlFor="energy_level">Energy Level</label>
+            <label htmlFor="energy_level" className="label-with-help">
+              Energy Level
+              <span
+                className="help-icon"
+                aria-label="Expected energy cost to complete this task."
+                tabIndex={0}
+              >
+                !
+                <span className="help-tooltip" role="tooltip">
+                  Expected energy cost to complete this task.
+                </span>
+              </span>
+            </label>
             <select
               id="energy_level"
               name="energy_level"

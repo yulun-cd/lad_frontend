@@ -59,10 +59,22 @@ function TasksPage() {
   }
 
   const handleUpdateTask = async (id, taskData) => {
+    const existingTask = tasks.find((task) => task.id === id)
+    const nextStatus = taskData?.status ? String(taskData.status).toUpperCase() : null
+    const becameCompleted = (
+      existingTask &&
+      existingTask.status !== 'COMPLETED' &&
+      nextStatus === 'COMPLETED'
+    )
+
     try {
       await tasksService.updateTask(id, taskData)
       await fetchTasks()
       setEditingTask(null)
+
+      if (becameCompleted) {
+        window.dispatchEvent(new CustomEvent('tasks:completed'))
+      }
     } catch (err) {
       setError('Failed to update task. Please try again.')
       console.error('Error updating task:', err)
@@ -120,6 +132,10 @@ function TasksPage() {
     try {
       await tasksService.updateTask(draggedTaskId, { status: targetStatus })
       await fetchTasks()
+
+      if (targetStatus === 'COMPLETED') {
+        window.dispatchEvent(new CustomEvent('tasks:completed'))
+      }
     } catch (err) {
       setTasks(previousTasks)
       setError('Failed to move task. Please try again.')
@@ -211,7 +227,7 @@ function TasksPage() {
         />
       )}
 
-      <div className="kanban-board">
+      <div className={`kanban-board${showCompleted ? ' kanban-board--three' : ''}`}>
         {columns.map((column) => (
           <section
             key={column.key}
@@ -240,6 +256,8 @@ function TasksPage() {
                       task={task}
                       onEdit={() => setEditingTask(task)}
                       onDelete={() => handleDeleteTask(task.id)}
+                      showCompleteCheckbox={task.status === 'PENDING' || task.status === 'IN_PROGRESS'}
+                      onMarkCompleted={() => handleUpdateTask(task.id, { status: 'COMPLETED' })}
                     />
                   </div>
                 ))
