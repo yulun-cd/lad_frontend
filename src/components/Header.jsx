@@ -102,6 +102,9 @@ export function Header() {
               >
                 Daily Logs
               </Link>
+              <Link to="/visualizations" className="nav-link">
+                Visualizations
+              </Link>
               <Link to="/profile" className="nav-link">
                 Profile
               </Link>

@@ -7,7 +7,9 @@ import LoginPage from './pages/LoginPage'
 import RegisterPage from './pages/RegisterPage'
 import HomePage from './pages/HomePage'
 import TasksPage from './pages/TasksPage'
+import AddTaskPage from './pages/AddTaskPage'
 import DailyLogsPage from './pages/DailyLogsPage'
+import VisualizationPage from './pages/VisualizationPage'
 import ProfilePage from './pages/ProfilePage'
 import NotFoundPage from './pages/NotFoundPage'
 
@@ -35,10 +37,26 @@ function App() {
                 }
               />
               <Route
+                path="/tasks/new"
+                element={
+                  <ProtectedRoute>
+                    <AddTaskPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
                 path="/daily-logs"
                 element={
                   <ProtectedRoute>
                     <DailyLogsPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/visualizations"
+                element={
+                  <ProtectedRoute>
+                    <VisualizationPage />
                   </ProtectedRoute>
                 }
               />

@@ -1,14 +1,14 @@
 import { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { tasksService } from '../services/tasks'
 import TaskCard from '../components/TaskCard'
-import TaskForm from '../components/TaskForm'
 import '../styles/tasks.css'
 
 function TasksPage() {
+  const navigate = useNavigate()
   const [tasks, setTasks] = useState([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState(null)
-  const [showForm, setShowForm] = useState(false)
   const [editingTask, setEditingTask] = useState(null)
   const [showCompleted, setShowCompleted] = useState(false)
   const [draggedTaskId, setDraggedTaskId] = useState(null)
@@ -20,7 +20,6 @@ function TasksPage() {
 
   useEffect(() => {
     const resetTasksView = () => {
-      setShowForm(false)
       setEditingTask(null)
       setError(null)
       setDraggedTaskId(null)
@@ -44,17 +43,6 @@ function TasksPage() {
       console.error('Error fetching tasks:', err)
     } finally {
       setIsLoading(false)
-    }
-  }
-
-  const handleAddTask = async (taskData) => {
-    try {
-      await tasksService.createTask(taskData)
-      await fetchTasks()
-      setShowForm(false)
-    } catch (err) {
-      setError('Failed to create task. Please try again.')
-      console.error('Error creating task:', err)
     }
   }
 
@@ -176,6 +164,12 @@ function TasksPage() {
     columns.push({ key: 'COMPLETED', title: 'Completed', tasks: completedTasks })
   }
 
+  const getAddButtonLabel = (status) => {
+    if (status === 'IN_PROGRESS') return '+ Add In Progress Task'
+    if (status === 'PENDING') return '+ Add Pending Task'
+    return '+ Add Task'
+  }
+
   if (isLoading && tasks.length === 0) {
     return (
       <div className="loading">
@@ -198,26 +192,10 @@ function TasksPage() {
             />
             Show Completed
           </label>
-          <button
-            className="primary"
-            onClick={() => {
-              setEditingTask(null)
-              setShowForm(!showForm)
-            }}
-          >
-            {showForm ? 'Close' : '+ Add Task'}
-          </button>
         </div>
       </div>
 
       {error && <div className="error-banner">{error}</div>}
-
-      {showForm && (
-        <TaskForm
-          onSubmit={handleAddTask}
-          onCancel={() => setShowForm(false)}
-        />
-      )}
 
       {editingTask && (
         <TaskForm
@@ -263,6 +241,18 @@ function TasksPage() {
                 ))
               )}
             </div>
+
+            {(column.key === 'IN_PROGRESS' || column.key === 'PENDING') && (
+              <div className="kanban-column-footer">
+                <button
+                  type="button"
+                  className="secondary column-add-task-btn"
+                  onClick={() => navigate(`/tasks/new?status=${column.key}`)}
+                >
+                  {getAddButtonLabel(column.key)}
+                </button>
+              </div>
+            )}
           </section>
         ))}
       </div>

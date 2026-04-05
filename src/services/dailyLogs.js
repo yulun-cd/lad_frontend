@@ -38,6 +38,14 @@ const mapDailyLogToApi = (data) => {
   };
 };
 
+const mapEnergyOverTimePoint = (point) => ({
+  date: point.date,
+  overall: Number(point.overall ?? 0),
+  energy: Number(point.energy ?? 0),
+  emotion: Number(point.emotion ?? 0),
+  productivity: Number(point.productivity ?? 0),
+});
+
 export const dailyLogsService = {
   getDailyLogs: async (params = {}) => {
     const response = await api.get("/api/daily-logs/", { params });
@@ -69,5 +77,23 @@ export const dailyLogsService = {
 
   deleteDailyLog: async (id) => {
     await api.delete(`/api/daily-logs/${id}/`);
+  },
+
+  getEnergyOverTime: async ({ startDate, endDate }) => {
+    const response = await api.get("/api/daily-logs/energy-over-time/", {
+      params: {
+        start_date: startDate,
+        end_date: endDate,
+      },
+    });
+
+    const raw = Array.isArray(response.data)
+      ? response.data
+      : response.data?.results ||
+        response.data?.data ||
+        response.data?.logs ||
+        [];
+
+    return raw.filter((item) => item && item.date).map(mapEnergyOverTimePoint);
   },
 };

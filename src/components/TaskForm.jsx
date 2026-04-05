@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react'
 import '../styles/task-form.css'
 
-function TaskForm({ task, onSubmit, onCancel }) {
+function TaskForm({ task, onSubmit, onCancel, initialStatus = 'PENDING', showStatusField = true }) {
+  const normalizedInitialStatus = String(initialStatus || 'PENDING').toUpperCase()
   const [formData, setFormData] = useState({
     title: '',
     description: '',
-    status: 'PENDING',
+    status: normalizedInitialStatus,
     energy_level: 3,
   })
   const [errors, setErrors] = useState({})
@@ -14,8 +15,14 @@ function TaskForm({ task, onSubmit, onCancel }) {
   useEffect(() => {
     if (task) {
       setFormData(task)
+      return
     }
-  }, [task])
+
+    setFormData((prev) => ({
+      ...prev,
+      status: normalizedInitialStatus,
+    }))
+  }, [task, normalizedInitialStatus])
 
   const handleChange = (e) => {
     const { name, value } = e.target
@@ -57,7 +64,7 @@ function TaskForm({ task, onSubmit, onCancel }) {
       setFormData({
         title: '',
         description: '',
-        status: 'PENDING',
+        status: normalizedInitialStatus,
         energy_level: 3,
       })
     } catch (err) {
@@ -99,21 +106,23 @@ function TaskForm({ task, onSubmit, onCancel }) {
           />
         </div>
 
-        <div className="form-row">
-          <div className="form-group">
-            <label htmlFor="status">Status</label>
-            <select
-              id="status"
-              name="status"
-              value={formData.status}
-              onChange={handleChange}
-              disabled={isSubmitting}
-            >
-              <option value="PENDING">Pending</option>
-              <option value="IN_PROGRESS">In Progress</option>
-              <option value="COMPLETED">Completed</option>
-            </select>
-          </div>
+        <div className={`form-row${showStatusField ? '' : ' form-row-single'}`}>
+          {showStatusField ? (
+            <div className="form-group">
+              <label htmlFor="status">Status</label>
+              <select
+                id="status"
+                name="status"
+                value={formData.status}
+                onChange={handleChange}
+                disabled={isSubmitting}
+              >
+                <option value="PENDING">Pending</option>
+                <option value="IN_PROGRESS">In Progress</option>
+                <option value="COMPLETED">Completed</option>
+              </select>
+            </div>
+          ) : null}
 
           <div className="form-group">
             <label htmlFor="energy_level" className="label-with-help">

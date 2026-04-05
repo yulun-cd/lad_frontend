@@ -24,6 +24,10 @@
   gap: 1.5rem;
 }
 
+.form-row-single {
+  grid-template-columns: 1fr;
+}
+
 .form-group {
   display: flex;
   flex-direction: column;
@@ -34,6 +38,33 @@
   font-weight: 600;
   color: var(--text-primary);
   font-size: 0.875rem;
+}
+
+.task-create-context {
+  margin: 0 0 1rem;
+  color: var(--text-secondary);
+  font-size: 0.95rem;
+}
+
+.task-create-status {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.15rem 0.55rem;
+  border-radius: 999px;
+  font-weight: 700;
+  border: 1px solid transparent;
+}
+
+.task-create-status--in-progress {
+  background-color: #eff6ff;
+  border-color: #bfdbfe;
+  color: #1d4ed8;
+}
+
+.task-create-status--pending {
+  background-color: #fffbeb;
+  border-color: #fde68a;
+  color: #a16207;
 }
 
 .label-with-help {
