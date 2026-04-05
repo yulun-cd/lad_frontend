@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { tasksService } from '../services/tasks'
 import TaskCard from '../components/TaskCard'
+import TaskForm from '../components/TaskForm'
 import '../styles/tasks.css'
 
 function TasksPage() {
