@@ -15,6 +15,111 @@
   gap: 1rem;
 }
 
+.tag-filter {
+  position: relative;
+}
+
+.tag-filter-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.3rem 0.65rem;
+  border-radius: 6px;
+  border: 1px solid var(--border-color, #ccc);
+  background: var(--bg-secondary, #fff);
+  color: var(--text-primary, #111);
+  font-size: 0.875rem;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.tag-filter-btn--open {
+  border-color: var(--primary-color, #6c8ebf);
+}
+
+.tag-filter-dots {
+  display: inline-flex;
+  gap: 3px;
+  align-items: center;
+}
+
+.tag-filter-dot {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.tag-filter-caret {
+  font-size: 0.7rem;
+  opacity: 0.6;
+  margin-left: 2px;
+}
+
+.tag-filter-dropdown {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  min-width: 180px;
+  background: var(--bg-secondary, #fff);
+  border: 1px solid var(--border-color, #ccc);
+  border-radius: 8px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+  padding: 0.4rem 0;
+  z-index: 100;
+}
+
+.tag-filter-option {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.4rem 0.75rem;
+  cursor: pointer;
+  font-size: 0.875rem;
+  color: var(--text-primary, #111);
+}
+
+.tag-filter-option:hover {
+  background: var(--bg-hover, #f5f5f5);
+}
+
+.tag-filter-option input[type="checkbox"] {
+  width: 14px;
+  height: 14px;
+  accent-color: var(--primary-color, #6c8ebf);
+  flex-shrink: 0;
+}
+
+.tag-filter-name {
+  flex: 1;
+}
+
+.tag-filter-empty {
+  padding: 0.5rem 0.75rem;
+  font-size: 0.85rem;
+  color: var(--text-secondary, #888);
+  margin: 0;
+}
+
+.tag-filter-clear {
+  display: block;
+  width: calc(100% - 1.5rem);
+  margin: 0.3rem 0.75rem 0.2rem;
+  padding: 0.4rem 0 0.2rem;
+  border: none;
+  border-top: 1px solid var(--border-color, #eee);
+  background: none;
+  color: var(--text-secondary, #888);
+  font-size: 0.8rem;
+  cursor: pointer;
+  text-align: left;
+}
+
+.tag-filter-clear:hover {
+  color: var(--text-primary, #111);
+}
+
 .show-completed-toggle {
   display: inline-flex;
   align-items: center;

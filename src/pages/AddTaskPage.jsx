@@ -1,12 +1,18 @@
-import { useMemo, useState } from 'react'
+import { useMemo, useState, useEffect } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import TaskForm from '../components/TaskForm'
 import { tasksService } from '../services/tasks'
+import { taskTagsService } from '../services/taskTags'
 
 function AddTaskPage() {
   const [searchParams] = useSearchParams()
   const navigate = useNavigate()
   const [error, setError] = useState(null)
+  const [tags, setTags] = useState([])
+
+  useEffect(() => {
+    taskTagsService.getTags().then(setTags).catch(() => {})
+  }, [])
 
   const initialStatus = useMemo(() => {
     const status = String(searchParams.get('status') || 'PENDING').toUpperCase()
@@ -44,6 +50,8 @@ function AddTaskPage() {
         onCancel={() => navigate('/tasks')}
         initialStatus={initialStatus}
         showStatusField={false}
+        tags={tags}
+        onTagsChange={setTags}
       />
     </div>
   )

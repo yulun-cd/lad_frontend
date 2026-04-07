@@ -25,6 +25,7 @@ const mapTaskFromApi = (task) => ({
   updated_at: task.updated_at,
   energy_level: task.energy_level,
   status: normalizeStatus(task.status),
+  tag: task.tag ?? null,
   // Backward-compatible UI aliases used by existing components.
   title: task.name,
   priority: energyToPriority(task.energy_level),
@@ -35,6 +36,7 @@ const mapTaskToApi = (data) => ({
   description: data.description ?? "",
   status: normalizeStatus(data.status),
   energy_level: data.energy_level ?? priorityToEnergy[data.priority] ?? 3,
+  tag: data.tag !== undefined ? data.tag : null,
 });
 
 export const tasksService = {
@@ -44,7 +46,17 @@ export const tasksService = {
     if (queryParams.STATUS) {
       queryParams.STATUS = String(queryParams.STATUS).toUpperCase();
     }
-    const response = await api.get("/api/tasks/", { params: queryParams });
+    const response = await api.get("/api/tasks/", {
+      params: queryParams,
+      paramsSerializer: (p) => {
+        const s = new URLSearchParams()
+        Object.entries(p).forEach(([k, v]) => {
+          if (Array.isArray(v)) v.forEach((x) => s.append(k, x))
+          else if (v != null) s.append(k, v)
+        })
+        return s.toString()
+      },
+    });
     const raw = Array.isArray(response.data)
       ? response.data
       : response.data?.results || [];

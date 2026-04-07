@@ -1,7 +1,10 @@
+import { useRef, useState } from 'react'
 import { format } from 'date-fns'
+import TagPicker from './TagPicker'
 import '../styles/task-card.css'
+import '../styles/tags.css'
 
-function TaskCard({ task, onEdit, onDelete, showCompleteCheckbox = false, onMarkCompleted }) {
+function TaskCard({ task, onEdit, onDelete, showCompleteCheckbox = false, onMarkCompleted, tags = [], onTagChange, onTagsChange }) {
   const displayTimestamp = task.updated_at || task.created_at
   const formattedTimestamp = displayTimestamp
     ? format(new Date(displayTimestamp), 'MMM dd, yyyy HH:mm')
@@ -46,6 +49,14 @@ function TaskCard({ task, onEdit, onDelete, showCompleteCheckbox = false, onMark
                 <span className={`energy-badge ${getEnergyClass(task.energy_level)}`}>
                   Energy: {task.energy_level}/5
                 </span>
+                {onTagChange && (
+                  <TagPicker
+                    tags={tags}
+                    value={task.tag}
+                    onChange={(tagId) => onTagChange(task.id, tagId)}
+                    onTagsChange={onTagsChange}
+                  />
+                )}
               </div>
 
               <div className="task-actions">

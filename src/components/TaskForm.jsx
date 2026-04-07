@@ -1,13 +1,15 @@
 import { useState, useEffect } from 'react'
+import TagPicker from './TagPicker'
 import '../styles/task-form.css'
 
-function TaskForm({ task, onSubmit, onCancel, initialStatus = 'PENDING', showStatusField = true }) {
+function TaskForm({ task, onSubmit, onCancel, initialStatus = 'PENDING', showStatusField = true, tags = [], onTagsChange }) {
   const normalizedInitialStatus = String(initialStatus || 'PENDING').toUpperCase()
   const [formData, setFormData] = useState({
     title: '',
     description: '',
     status: normalizedInitialStatus,
     energy_level: 3,
+    tag: null,
   })
   const [errors, setErrors] = useState({})
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -21,6 +23,7 @@ function TaskForm({ task, onSubmit, onCancel, initialStatus = 'PENDING', showSta
     setFormData((prev) => ({
       ...prev,
       status: normalizedInitialStatus,
+      tag: null,
     }))
   }, [task, normalizedInitialStatus])
 
@@ -59,6 +62,7 @@ function TaskForm({ task, onSubmit, onCancel, initialStatus = 'PENDING', showSta
         description: formData.description,
         status: formData.status,
         energy_level: parseInt(formData.energy_level, 10),
+        tag: formData.tag ?? null,
       }
       await onSubmit(submitData)
       setFormData({
@@ -66,6 +70,7 @@ function TaskForm({ task, onSubmit, onCancel, initialStatus = 'PENDING', showSta
         description: '',
         status: normalizedInitialStatus,
         energy_level: 3,
+        tag: null,
       })
     } catch (err) {
       console.error('Form submission error:', err)
@@ -153,6 +158,18 @@ function TaskForm({ task, onSubmit, onCancel, initialStatus = 'PENDING', showSta
             </select>
           </div>
         </div>
+
+          <div className="form-group">
+            <label>Tag</label>
+            <TagPicker
+              variant="form"
+              tags={tags}
+              value={formData.tag}
+              onChange={(id) => setFormData((prev) => ({ ...prev, tag: id }))}
+              onTagsChange={onTagsChange ?? (() => {})}
+              disabled={isSubmitting}
+            />
+          </div>
 
         <div className="form-actions">
           <button

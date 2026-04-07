@@ -1,23 +1,101 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { tasksService } from '../services/tasks'
+import { taskTagsService } from '../services/taskTags'
 import TaskCard from '../components/TaskCard'
 import TaskForm from '../components/TaskForm'
 import '../styles/tasks.css'
 
+function TagFilter({ tags, selectedTagIds, onChange }) {
+  const [open, setOpen] = useState(false)
+  const ref = useRef(null)
+
+  useEffect(() => {
+    const handler = (e) => {
+      if (ref.current && !ref.current.contains(e.target)) setOpen(false)
+    }
+    document.addEventListener('mousedown', handler)
+    return () => document.removeEventListener('mousedown', handler)
+  }, [])
+
+  const toggle = (id) => {
+    onChange(
+      selectedTagIds.includes(id)
+        ? selectedTagIds.filter((x) => x !== id)
+        : [...selectedTagIds, id]
+    )
+  }
+
+  const label =
+    selectedTagIds.length === 0
+      ? 'All tags'
+      : selectedTagIds.length === 1
+        ? (tags.find((t) => t.id === selectedTagIds[0])?.name ?? '1 tag')
+        : `${selectedTagIds.length} tags`
+
+  return (
+    <div className="tag-filter" ref={ref}>
+      <button
+        type="button"
+        className={`tag-filter-btn${open ? ' tag-filter-btn--open' : ''}`}
+        onClick={() => setOpen((v) => !v)}
+      >
+        {selectedTagIds.length > 0 && (
+          <span className="tag-filter-dots">
+            {selectedTagIds.slice(0, 4).map((id) => {
+              const tag = tags.find((t) => t.id === id)
+              return tag ? (
+                <span key={id} className="tag-filter-dot" style={{ background: tag.color }} />
+              ) : null
+            })}
+          </span>
+        )}
+        <span>{label}</span>
+        <span className="tag-filter-caret">▾</span>
+      </button>
+      {open && (
+        <div className="tag-filter-dropdown">
+          {tags.length === 0 && <p className="tag-filter-empty">No tags</p>}
+          {tags.map((tag) => (
+            <label key={tag.id} className="tag-filter-option">
+              <input
+                type="checkbox"
+                checked={selectedTagIds.includes(tag.id)}
+                onChange={() => toggle(tag.id)}
+              />
+              <span className="tag-filter-dot" style={{ background: tag.color }} />
+              <span className="tag-filter-name">{tag.name}</span>
+            </label>
+          ))}
+          {selectedTagIds.length > 0 && (
+            <button type="button" className="tag-filter-clear" onClick={() => onChange([])}>
+              Clear filter
+            </button>
+          )}
+        </div>
+      )}
+    </div>
+  )
+}
+
 function TasksPage() {
   const navigate = useNavigate()
   const [tasks, setTasks] = useState([])
+  const [tags, setTags] = useState([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState(null)
   const [editingTask, setEditingTask] = useState(null)
   const [showCompleted, setShowCompleted] = useState(false)
   const [draggedTaskId, setDraggedTaskId] = useState(null)
   const [dragOverStatus, setDragOverStatus] = useState(null)
+  const [selectedTagIds, setSelectedTagIds] = useState([])
 
   useEffect(() => {
-    fetchTasks()
+    taskTagsService.getTags().then(setTags).catch(() => {})
   }, [])
+
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(() => { fetchTasks() }, [selectedTagIds.join(',')])
 
   useEffect(() => {
     const resetTasksView = () => {
@@ -37,7 +115,8 @@ function TasksPage() {
     setIsLoading(true)
     setError(null)
     try {
-      const data = await tasksService.getTasks()
+      const params = selectedTagIds.length > 0 ? { tag: selectedTagIds } : {}
+      const data = await tasksService.getTasks(params)
       setTasks(Array.isArray(data) ? data : data.results || [])
     } catch (err) {
       setError('Failed to load tasks. Please try again.')
@@ -67,6 +146,19 @@ function TasksPage() {
     } catch (err) {
       setError('Failed to update task. Please try again.')
       console.error('Error updating task:', err)
+    }
+  }
+
+  const handleTagChange = async (taskId, tagId) => {
+    // Optimistic update
+    setTasks((prev) => prev.map((t) => (t.id === taskId ? { ...t, tag: tagId } : t)))
+    try {
+      await tasksService.updateTask(taskId, { tag: tagId })
+      await fetchTasks()
+    } catch (err) {
+      setError('Failed to update tag.')
+      console.error('Error updating task tag:', err)
+      await fetchTasks()
     }
   }
 
@@ -185,6 +277,11 @@ function TasksPage() {
       <div className="tasks-header">
         <h1>My Tasks</h1>
         <div className="tasks-header-controls">
+          <TagFilter
+            tags={tags}
+            selectedTagIds={selectedTagIds}
+            onChange={setSelectedTagIds}
+          />
           <label className="show-completed-toggle">
             <input
               type="checkbox"
@@ -203,6 +300,8 @@ function TasksPage() {
           task={editingTask}
           onSubmit={(data) => handleUpdateTask(editingTask.id, data)}
           onCancel={() => setEditingTask(null)}
+          tags={tags}
+          onTagsChange={setTags}
         />
       )}
 
@@ -237,6 +336,9 @@ function TasksPage() {
                       onDelete={() => handleDeleteTask(task.id)}
                       showCompleteCheckbox={task.status === 'PENDING' || task.status === 'IN_PROGRESS'}
                       onMarkCompleted={() => handleUpdateTask(task.id, { status: 'COMPLETED' })}
+                      tags={tags}
+                      onTagChange={handleTagChange}
+                      onTagsChange={setTags}
                     />
                   </div>
                 ))
