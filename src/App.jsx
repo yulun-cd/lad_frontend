@@ -10,6 +10,8 @@ import TasksPage from './pages/TasksPage'
 import AddTaskPage from './pages/AddTaskPage'
 import DailyLogsPage from './pages/DailyLogsPage'
 import VisualizationPage from './pages/VisualizationPage'
+import EnergyOverTimePage from './pages/EnergyOverTimePage'
+import CompletionTimePage from './pages/CompletionTimePage'
 import ProfilePage from './pages/ProfilePage'
 import NotFoundPage from './pages/NotFoundPage'
 
@@ -57,6 +59,22 @@ function App() {
                 element={
                   <ProtectedRoute>
                     <VisualizationPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/visualizations/energy-over-time"
+                element={
+                  <ProtectedRoute>
+                    <EnergyOverTimePage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/visualizations/completion-time"
+                element={
+                  <ProtectedRoute>
+                    <CompletionTimePage />
                   </ProtectedRoute>
                 }
               />

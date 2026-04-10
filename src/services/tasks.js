@@ -76,8 +76,13 @@ export const tasksService = {
 
   updateTask: async (id, data) => {
     // PUT requires a complete representation, so merge with current task for partial UI updates.
+    // Normalise title→name before merging so the incoming value isn't shadowed
+    // by the existing `name` field on the fetched task.
+    const normalizedData = data.title !== undefined && data.name === undefined
+      ? { ...data, name: data.title }
+      : { ...data }
     const current = await tasksService.getTask(id);
-    const merged = { ...current, ...data };
+    const merged = { ...current, ...normalizedData };
     const payload = mapTaskToApi(merged);
     const response = await api.put(`/api/tasks/${id}/`, payload);
     return mapTaskFromApi(response.data);
@@ -85,5 +90,46 @@ export const tasksService = {
 
   deleteTask: async (id) => {
     await api.delete(`/api/tasks/${id}/`);
+  },
+
+  getCompletionTime: async () => {
+    const response = await api.get("/api/tasks/completion-time/");
+    const data = response.data;
+
+    const SECTIONS = [
+      { key: 'morning',   hours: [8, 9, 10, 11],            aliases: ['morning',   '08:00-12:00', '08:00–12:00'] },
+      { key: 'afternoon', hours: [12, 13, 14, 15, 16],      aliases: ['afternoon', '12:00-17:00', '12:00–17:00'] },
+      { key: 'evening',   hours: [17, 18, 19, 20],          aliases: ['evening',   '17:00-21:00', '17:00–21:00'] },
+      { key: 'night',     hours: [21,22,23,0,1,2,3,4,5,6,7], aliases: ['night',   '21:00-08:00', '21:00–08:00'] },
+    ];
+
+    const counts = { morning: 0, afternoon: 0, evening: 0, night: 0 };
+
+    const sectionForHour = (hour) =>
+      SECTIONS.find((s) => s.hours.includes(Number(hour)))?.key ?? null;
+
+    const sectionForLabel = (raw) => {
+      const s = String(raw).toLowerCase().trim();
+      return SECTIONS.find((sec) => sec.aliases.some((a) => s.includes(a.toLowerCase())))?.key ?? null;
+    };
+
+    if (Array.isArray(data)) {
+      data.forEach((item) => {
+        const count = Number(item.count ?? item.total ?? 0);
+        // Prefer hour-based mapping; fall back to label-based.
+        const sec =
+          item.hour != null
+            ? sectionForHour(item.hour)
+            : sectionForLabel(item.time_section ?? item.section ?? item.label ?? item.key ?? '');
+        if (sec) counts[sec] += count;
+      });
+    } else if (data && typeof data === 'object') {
+      Object.entries(data).forEach(([k, v]) => {
+        const sec = !isNaN(Number(k)) ? sectionForHour(Number(k)) : sectionForLabel(k);
+        if (sec) counts[sec] += Number(v ?? 0);
+      });
+    }
+
+    return SECTIONS.map((sec) => ({ section: sec.key, count: counts[sec.key] }));
   },
 };
