@@ -4,6 +4,13 @@ import '../styles/tags.css'
 
 const DEFAULT_COLOR = '#6366f1'
 
+const COLOR_PALETTE = [
+  '#ef4444', '#f97316', '#f59e0b', '#eab308',
+  '#84cc16', '#22c55e', '#10b981', '#14b8a6',
+  '#06b6d4', '#3b82f6', '#6366f1', '#8b5cf6',
+  '#a855f7', '#ec4899', '#f43f5e', '#64748b',
+]
+
 /**
  * Unified tag picker with full inline management (create / edit / delete).
  *
@@ -64,6 +71,7 @@ function TagPicker({ tags, value, onChange, onTagsChange, variant = 'card', disa
 
   const handleCreate = async (e) => {
     e.preventDefault()
+    e.stopPropagation()
     if (!form.name.trim()) return
     setSaving(true)
     setErr(null)
@@ -80,6 +88,7 @@ function TagPicker({ tags, value, onChange, onTagsChange, variant = 'card', disa
 
   const handleEdit = async (e) => {
     e.preventDefault()
+    e.stopPropagation()
     if (!form.name.trim() || !editingTag) return
     setSaving(true)
     setErr(null)
@@ -155,6 +164,7 @@ function TagPicker({ tags, value, onChange, onTagsChange, variant = 'card', disa
           role="dialog"
           aria-label="Tag menu"
         >
+          <p className="tag-dropdown-title">Task Tag</p>
           {err && <p className="tag-dropdown-error">{err}</p>}
 
           {view === 'list' && (
@@ -221,18 +231,13 @@ function TagPicker({ tags, value, onChange, onTagsChange, variant = 'card', disa
           )}
 
           {(view === 'create' || view === 'edit') && (
-            <form
-              className="tag-inline-form"
-              onSubmit={view === 'create' ? handleCreate : handleEdit}
-            >
+            <div className="tag-inline-form">
               <p className="tag-inline-form-title">{view === 'create' ? 'New tag' : 'Edit tag'}</p>
               <div className="tag-inline-form-row">
-                <input
-                  type="color"
-                  className="tag-color-input"
-                  value={form.color}
-                  onChange={(e) => setForm((prev) => ({ ...prev, color: e.target.value }))}
-                  title="Tag color"
+                <div
+                  className="tag-color-swatch"
+                  style={{ background: form.color }}
+                  title={form.color}
                 />
                 <input
                   type="text"
@@ -244,6 +249,19 @@ function TagPicker({ tags, value, onChange, onTagsChange, variant = 'card', disa
                   autoFocus
                 />
               </div>
+              <div className="tag-color-palette">
+                {COLOR_PALETTE.map((color) => (
+                  <button
+                    key={color}
+                    type="button"
+                    className={`tag-palette-swatch${form.color === color ? ' tag-palette-swatch--selected' : ''}`}
+                    style={{ background: color }}
+                    onClick={() => setForm((prev) => ({ ...prev, color }))}
+                    title={color}
+                    aria-label={`Select color ${color}`}
+                  />
+                ))}
+              </div>
               <div className="tag-inline-form-actions">
                 <button
                   type="button"
@@ -253,14 +271,15 @@ function TagPicker({ tags, value, onChange, onTagsChange, variant = 'card', disa
                   Back
                 </button>
                 <button
-                  type="submit"
+                  type="button"
                   className="tag-btn tag-btn--save"
                   disabled={saving || !form.name.trim()}
+                  onClick={view === 'create' ? handleCreate : handleEdit}
                 >
                   {saving ? 'Saving…' : view === 'create' ? 'Create' : 'Save'}
                 </button>
               </div>
-            </form>
+            </div>
           )}
         </div>
       )}

@@ -157,8 +157,10 @@
   display: grid;
   grid-template-columns: repeat(var(--kanban-cols, 2), minmax(0, 1fr));
   gap: 1rem;
-  align-items: start;
+  align-items: stretch;
   transition: grid-template-columns 0.25s ease;
+  height: calc(100vh - 180px);
+  min-height: 0;
 }
 
 .kanban-board--three {
@@ -170,7 +172,10 @@
   border: 1px solid var(--border-color);
   border-radius: 10px;
   padding: 1rem;
-  min-height: 320px;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
   transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
@@ -225,6 +230,10 @@
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
+  flex: 1;
+  overflow-y: auto;
+  min-height: 0;
+  padding-right: 2px;
 }
 
 .kanban-column-footer {
@@ -242,6 +251,28 @@
 
 .column-add-task-btn:hover {
   transform: translateY(-1px);
+}
+
+/* ── Add Task Modal ──────────────────────────────────────── */
+
+.task-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.45);
+  backdrop-filter: blur(2px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 200;
+  padding: 1.5rem;
+}
+
+.task-modal {
+  width: 100%;
+  max-width: 640px;
+  max-height: 90vh;
+  overflow-y: auto;
+  border-radius: 16px;
 }
 
 .kanban-task-item {

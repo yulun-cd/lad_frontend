@@ -62,6 +62,18 @@
   padding: 0.3rem 0;
 }
 
+.tag-dropdown-title {
+  margin: 0;
+  padding: 0.55rem 0.75rem 0.35rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--text-secondary);
+  border-bottom: 1px solid var(--border-color);
+  margin-bottom: 0.2rem;
+}
+
 .tag-dropdown-error {
   margin: 0.4rem 0.75rem;
   padding: 0.4rem 0.6rem;
@@ -187,15 +199,41 @@
 
 /* ── Shared icon/text buttons ──────────────────────────── */
 
-.tag-color-input {
-  width: 32px;
-  height: 32px;
-  padding: 1px;
-  border: 1px solid var(--border-color);
+.tag-color-swatch {
+  width: 28px;
+  height: 28px;
+  min-width: 28px;
+  flex: 0 0 28px;
   border-radius: 6px;
+  border: 1px solid var(--border-color);
+  display: block;
+}
+
+.tag-color-palette {
+  display: grid;
+  grid-template-columns: repeat(8, 1fr);
+  gap: 5px;
+  padding: 0 0 0.4rem;
+}
+
+.tag-palette-swatch {
+  width: 100%;
+  aspect-ratio: 1;
+  border-radius: 5px;
+  border: 2px solid transparent;
   cursor: pointer;
-  flex: 0 0 32px;
-  background: transparent;
+  padding: 0;
+  transition: transform 0.1s, border-color 0.1s;
+}
+
+.tag-palette-swatch:hover {
+  transform: scale(1.15);
+}
+
+.tag-palette-swatch--selected {
+  border-color: #fff;
+  outline: 2px solid var(--primary-color);
+  outline-offset: 1px;
 }
 
 .tag-name-input {

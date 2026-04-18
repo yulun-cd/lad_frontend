@@ -76,6 +76,26 @@
   font-size: 0.6875rem;
 }
 
+.task-due-date {
+  margin: 0.35rem 0 0;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--primary-color);
+}
+
+.task-recurring-badge {
+  margin: 0.2rem 0 0;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: #7c3aed;
+}
+
+.task-spawned-badge {
+  margin: 0.2rem 0 0;
+  font-size: 0.72rem;
+  color: var(--text-secondary);
+}
+
 .task-badges {
   display: flex;
   gap: 0.35rem;

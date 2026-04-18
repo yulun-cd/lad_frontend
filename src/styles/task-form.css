@@ -20,12 +20,50 @@
 
 .form-row {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
   gap: 1.5rem;
 }
 
 .form-row-single {
-  grid-template-columns: 1fr;
+  grid-template-columns: 1fr 1fr;
+}
+
+.form-recurrence-row {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.form-recurrence-row input {
+  width: 80px;
+}
+
+.form-recurrence-unit {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
+
+.form-energy-tag-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.form-energy-tag-row select {
+  flex: 1;
+  min-width: 0;
+}
+
+.form-title-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.form-title-row input {
+  flex: 1;
+  min-width: 0;
 }
 
 .form-group {

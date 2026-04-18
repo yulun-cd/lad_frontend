@@ -1,5 +1,4 @@
 import { useState, useEffect, useRef } from 'react'
-import { useNavigate } from 'react-router-dom'
 import { tasksService } from '../services/tasks'
 import { taskTagsService } from '../services/taskTags'
 import TaskCard from '../components/TaskCard'
@@ -79,12 +78,12 @@ function TagFilter({ tags, selectedTagIds, onChange }) {
 }
 
 function TasksPage() {
-  const navigate = useNavigate()
   const [tasks, setTasks] = useState([])
   const [tags, setTags] = useState([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState(null)
   const [editingTask, setEditingTask] = useState(null)
+  const [addingStatus, setAddingStatus] = useState(null)
   const [showCompleted, setShowCompleted] = useState(false)
   const [draggedTaskId, setDraggedTaskId] = useState(null)
   const [dragOverStatus, setDragOverStatus] = useState(null)
@@ -146,6 +145,17 @@ function TasksPage() {
     } catch (err) {
       setError('Failed to update task. Please try again.')
       console.error('Error updating task:', err)
+    }
+  }
+
+  const handleCreateTask = async (taskData) => {
+    try {
+      await tasksService.createTask(taskData)
+      await fetchTasks()
+      setAddingStatus(null)
+    } catch (err) {
+      setError('Failed to create task. Please try again.')
+      console.error('Error creating task:', err)
     }
   }
 
@@ -296,13 +306,32 @@ function TasksPage() {
       {error && <div className="error-banner">{error}</div>}
 
       {editingTask && (
-        <TaskForm
-          task={editingTask}
-          onSubmit={(data) => handleUpdateTask(editingTask.id, data)}
-          onCancel={() => setEditingTask(null)}
-          tags={tags}
-          onTagsChange={setTags}
-        />
+        <div className="task-modal-overlay" onClick={(e) => { if (e.target === e.currentTarget) setEditingTask(null) }}>
+          <div className="task-modal">
+            <TaskForm
+              task={editingTask}
+              onSubmit={(data) => handleUpdateTask(editingTask.id, data)}
+              onCancel={() => setEditingTask(null)}
+              tags={tags}
+              onTagsChange={setTags}
+            />
+          </div>
+        </div>
+      )}
+
+      {addingStatus && (
+        <div className="task-modal-overlay" onClick={(e) => { if (e.target === e.currentTarget) setAddingStatus(null) }}>
+          <div className="task-modal">
+            <TaskForm
+              onSubmit={handleCreateTask}
+              onCancel={() => setAddingStatus(null)}
+              initialStatus={addingStatus}
+              showStatusField={false}
+              tags={tags}
+              onTagsChange={setTags}
+            />
+          </div>
+        </div>
       )}
 
       <div className={`kanban-board${showCompleted ? ' kanban-board--three' : ''}`}>
@@ -350,7 +379,7 @@ function TasksPage() {
                 <button
                   type="button"
                   className="secondary column-add-task-btn"
-                  onClick={() => navigate(`/tasks/new?status=${column.key}`)}
+                  onClick={() => setAddingStatus(column.key)}
                 >
                   {getAddButtonLabel(column.key)}
                 </button>

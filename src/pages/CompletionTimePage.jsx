@@ -11,89 +11,67 @@ const COMPLETION_SECTIONS = [
 ]
 
 function CompletionTimeChart({ data }) {
-  const width = 560
-  const height = 260
-  const padding = { top: 24, right: 24, bottom: 52, left: 40 }
-  const innerWidth = width - padding.left - padding.right
-  const innerHeight = height - padding.top - padding.bottom
+  const cx = 160
+  const cy = 160
+  const r = 130
+  const total = data.reduce((sum, d) => sum + d.count, 0)
 
-  const maxCount = Math.max(...data.map((d) => d.count), 4)
-  const slotWidth = innerWidth / data.length
-  const barWidth = slotWidth * 0.55
-
-  const xCenter = (i) => padding.left + slotWidth * i + slotWidth / 2
-  const yForCount = (count) => padding.top + innerHeight - (count / maxCount) * innerHeight
-
-  const yTicks = Array.from({ length: maxCount + 1 }, (_, i) => i).filter(
-    (v) => v === 0 || v === maxCount || (maxCount <= 10 ? true : v % Math.ceil(maxCount / 5) === 0)
-  )
+  const slices = []
+  let startAngle = -Math.PI / 2
+  data.forEach((d) => {
+    const section = COMPLETION_SECTIONS.find((s) => s.key === d.section)
+    const angle = (d.count / total) * 2 * Math.PI
+    const endAngle = startAngle + angle
+    const x1 = cx + r * Math.cos(startAngle)
+    const y1 = cy + r * Math.sin(startAngle)
+    const x2 = cx + r * Math.cos(endAngle)
+    const y2 = cy + r * Math.sin(endAngle)
+    const largeArc = angle > Math.PI ? 1 : 0
+    const midAngle = startAngle + angle / 2
+    const labelR = r * 0.65
+    const lx = cx + labelR * Math.cos(midAngle)
+    const ly = cy + labelR * Math.sin(midAngle)
+    slices.push({ ...d, section, x1, y1, x2, y2, largeArc, lx, ly, angle })
+    startAngle = endAngle
+  })
 
   return (
-    <div className="viz-chart-shell">
+    <div className="viz-chart-shell viz-pie-shell">
       <svg
-        viewBox={`0 0 ${width} ${height}`}
-        className="viz-bar-chart"
+        viewBox="0 0 320 320"
+        className="viz-pie-chart"
         role="img"
-        aria-label="Task completion time of day chart"
+        aria-label="Task completion time of day pie chart"
       >
-        {yTicks.map((tick) => {
-          const y = yForCount(tick)
-          return (
-            <g key={`ytick-${tick}`}>
-              <line x1={padding.left} y1={y} x2={width - padding.right} y2={y} className="viz-grid-line" />
-              <text x={padding.left - 6} y={y + 4} className="viz-axis-label" textAnchor="end">{tick}</text>
-            </g>
-          )
-        })}
-
-        {data.map((d, i) => {
-          const section = COMPLETION_SECTIONS.find((s) => s.key === d.section)
-          const x = xCenter(i) - barWidth / 2
-          const barH = (d.count / maxCount) * innerHeight
-          const y = yForCount(d.count)
-          return (
-            <g key={d.section}>
-              <rect
-                x={x}
-                y={y}
-                width={barWidth}
-                height={barH}
-                fill={section?.color ?? '#2563eb'}
-                rx="4"
-                opacity="0.88"
-              >
-                <title>{`${section?.label}: ${d.count} task${d.count !== 1 ? 's' : ''}`}</title>
-              </rect>
-              {d.count > 0 && (
-                <text
-                  x={xCenter(i)}
-                  y={y - 6}
-                  className="viz-bar-value"
-                  textAnchor="middle"
-                >
-                  {d.count}
-                </text>
-              )}
-            </g>
-          )
-        })}
-
-        <line
-          x1={padding.left}
-          y1={padding.top + innerHeight}
-          x2={width - padding.right}
-          y2={padding.top + innerHeight}
-          className="viz-grid-line"
-        />
+        {slices.map((s) => (
+          <g key={s.key}>
+            <path
+              d={`M ${cx} ${cy} L ${s.x1} ${s.y1} A ${r} ${r} 0 ${s.largeArc} 1 ${s.x2} ${s.y2} Z`}
+              fill={s.section?.color ?? '#2563eb'}
+              opacity="0.88"
+              stroke="var(--card-bg)"
+              strokeWidth="2"
+            >
+              <title>{`${s.section?.label}: ${s.count} task${s.count !== 1 ? 's' : ''}`}</title>
+            </path>
+            {s.angle > 0.25 && (
+              <text x={s.lx} y={s.ly} textAnchor="middle" dominantBaseline="middle" className="viz-pie-label">
+                {s.count}
+              </text>
+            )}
+          </g>
+        ))}
       </svg>
 
-      <div className="viz-bar-axis">
+      <div className="viz-pie-legend">
         {data.map((d) => {
           const section = COMPLETION_SECTIONS.find((s) => s.key === d.section)
+          const pct = total > 0 ? Math.round((d.count / total) * 100) : 0
           return (
-            <div key={d.section} className="viz-bar-axis-label">
+            <div key={d.section} className="viz-pie-legend-item">
               <span className="viz-bar-axis-dot" style={{ background: section?.color }} />
-              {section?.label}
+              <span className="viz-pie-legend-label">{section?.label}</span>
+              <span className="viz-pie-legend-count">{d.count} ({pct}%)</span>
             </div>
           )
         })}

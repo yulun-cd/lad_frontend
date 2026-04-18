@@ -7,6 +7,8 @@ function TaskForm({ task, onSubmit, onCancel, initialStatus = 'PENDING', showSta
   const [formData, setFormData] = useState({
     title: '',
     description: '',
+    date: '',
+    recurrence_interval: '',
     status: normalizedInitialStatus,
     energy_level: 3,
     tag: null,
@@ -47,6 +49,9 @@ function TaskForm({ task, onSubmit, onCancel, initialStatus = 'PENDING', showSta
     if (!formData.title.trim()) {
       newErrors.title = 'Title is required'
     }
+    if (formData.recurrence_interval && !formData.date) {
+      newErrors.date = 'Due date is required for recurring tasks'
+    }
     setErrors(newErrors)
     return Object.keys(newErrors).length === 0
   }
@@ -60,6 +65,8 @@ function TaskForm({ task, onSubmit, onCancel, initialStatus = 'PENDING', showSta
       const submitData = {
         title: formData.title,
         description: formData.description,
+        date: formData.date || null,
+        recurrence_interval: formData.recurrence_interval ? parseInt(formData.recurrence_interval, 10) : null,
         status: formData.status,
         energy_level: parseInt(formData.energy_level, 10),
         tag: formData.tag ?? null,
@@ -68,6 +75,8 @@ function TaskForm({ task, onSubmit, onCancel, initialStatus = 'PENDING', showSta
       setFormData({
         title: '',
         description: '',
+        date: '',
+        recurrence_interval: '',
         status: normalizedInitialStatus,
         energy_level: 3,
         tag: null,
@@ -86,15 +95,23 @@ function TaskForm({ task, onSubmit, onCancel, initialStatus = 'PENDING', showSta
 
         <div className="form-group">
           <label htmlFor="title">Title</label>
-          <input
-            id="title"
-            type="text"
-            name="title"
-            value={formData.title}
-            onChange={handleChange}
-            placeholder="Task title"
-            disabled={isSubmitting}
-          />
+          <div className="form-title-row">
+            <input
+              id="title"
+              type="text"
+              name="title"
+              value={formData.title}
+              onChange={handleChange}
+              placeholder="Task title"
+              disabled={isSubmitting}
+            />
+            <TagPicker
+              tags={tags}
+              value={formData.tag}
+              onChange={(id) => setFormData((prev) => ({ ...prev, tag: id }))}
+              onTagsChange={onTagsChange ?? (() => {})}
+            />
+          </div>
           {errors.title && <span className="error">{errors.title}</span>}
         </div>
 
@@ -157,19 +174,51 @@ function TaskForm({ task, onSubmit, onCancel, initialStatus = 'PENDING', showSta
               <option value="5">Very High</option>
             </select>
           </div>
-        </div>
 
           <div className="form-group">
-            <label>Tag</label>
-            <TagPicker
-              variant="form"
-              tags={tags}
-              value={formData.tag}
-              onChange={(id) => setFormData((prev) => ({ ...prev, tag: id }))}
-              onTagsChange={onTagsChange ?? (() => {})}
+            <label htmlFor="date">Due Date</label>
+            <input
+              id="date"
+              type="date"
+              name="date"
+              value={formData.date ?? ''}
+              onChange={handleChange}
               disabled={isSubmitting}
             />
+            {errors.date && <span className="error">{errors.date}</span>}
           </div>
+
+          {!task?.recurrence_origin && (
+            <div className="form-group">
+              <label htmlFor="recurrence_interval" className="label-with-help">
+                Repeat every
+                <span
+                  className="help-icon"
+                  aria-label="Creates a new task this many days after the due date."
+                  tabIndex={0}
+                >
+                  !
+                  <span className="help-tooltip" role="tooltip">
+                    Creates a new task this many days after the due date.
+                  </span>
+                </span>
+              </label>
+              <div className="form-recurrence-row">
+                <input
+                  id="recurrence_interval"
+                  type="number"
+                  name="recurrence_interval"
+                  min="1"
+                  value={formData.recurrence_interval ?? ''}
+                  onChange={handleChange}
+                  placeholder="—"
+                  disabled={isSubmitting}
+                />
+                <span className="form-recurrence-unit">days</span>
+              </div>
+            </div>
+          )}
+        </div>
 
         <div className="form-actions">
           <button

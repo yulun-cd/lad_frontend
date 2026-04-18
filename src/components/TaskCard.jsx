@@ -40,6 +40,15 @@ function TaskCard({ task, onEdit, onDelete, showCompleteCheckbox = false, onMark
             <div className="task-main">
               <h3 className="task-title">{task.title}</h3>
               {task.description && <p className="task-description">{task.description}</p>}
+              {task.date && (
+                <p className="task-due-date">Due: {format(new Date(task.date), 'MMM dd, yyyy')}</p>
+              )}
+              {task.recurrence_interval && (
+                <p className="task-recurring-badge">↻ Every {task.recurrence_interval} day{task.recurrence_interval !== 1 ? 's' : ''}</p>
+              )}
+              {task.recurrence_origin && (
+                <p className="task-spawned-badge">↳ Recurring task</p>
+              )}
               {formattedTimestamp && (
                 <p className="task-timestamp">Last changed: {formattedTimestamp}</p>
               )}
