@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import TagPicker from './TagPicker'
 import '../styles/task-form.css'
 
-function TaskForm({ task, onSubmit, onCancel, initialStatus = 'PENDING', showStatusField = true, tags = [], onTagsChange }) {
+function TaskForm({ task, onSubmit, onCancel, initialStatus = 'PENDING', showStatusField = true, tags = [], onTagsChange, modalTitle }) {
   const normalizedInitialStatus = String(initialStatus || 'PENDING').toUpperCase()
   const [formData, setFormData] = useState({
     title: '',
@@ -91,7 +91,7 @@ function TaskForm({ task, onSubmit, onCancel, initialStatus = 'PENDING', showSta
   return (
     <div className="task-form-container">
       <form className="task-form" onSubmit={handleSubmit}>
-        <h2>{task ? 'Edit Task' : 'Create New Task'}</h2>
+        <h2>{modalTitle ?? (task ? 'Task Details' : 'Create New Task')}</h2>
 
         <div className="form-group">
           <label htmlFor="title">Title</label>

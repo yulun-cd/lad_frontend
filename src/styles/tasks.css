@@ -287,6 +287,10 @@
   opacity: 0.5;
 }
 
+.kanban-task-item.drag-over {
+  border-top: 2px solid var(--primary-color);
+}
+
 .empty-message {
   text-align: center;
   color: var(--text-secondary);

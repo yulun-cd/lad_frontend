@@ -24,6 +24,7 @@ const mapTaskFromApi = (task) => ({
   date: task.date ?? null,
   recurrence_interval: task.recurrence_interval ?? null,
   recurrence_origin: task.recurrence_origin ?? null,
+  position: task.position ?? 0,
   created_at: task.created_at,
   updated_at: task.updated_at,
   energy_level: task.energy_level,
@@ -38,6 +39,7 @@ const mapTaskToApi = (data) => ({
   name: data.name ?? data.title ?? "",
   description: data.description ?? "",
   date: data.date ?? null,
+  position: data.position != null ? Number(data.position) : undefined,
   recurrence_interval: data.recurrence_interval
     ? Number(data.recurrence_interval)
     : null,
@@ -64,9 +66,14 @@ export const tasksService = {
         return s.toString();
       },
     });
-    const raw = Array.isArray(response.data)
-      ? response.data
-      : response.data?.results || [];
+    const data = response.data;
+    // New grouped format: [{status, tasks: [...]}, ...]
+    if (Array.isArray(data) && data.length > 0 && data[0]?.tasks) {
+      return data.flatMap((group) =>
+        (group.tasks || []).map((t) => mapTaskFromApi({ ...t, status: group.status }))
+      );
+    }
+    const raw = Array.isArray(data) ? data : data?.results || [];
     return raw.map(mapTaskFromApi);
   },
 
@@ -98,6 +105,14 @@ export const tasksService = {
 
   deleteTask: async (id) => {
     await api.delete(`/api/tasks/${id}/`);
+  },
+
+  patchTask: async (id, data) => {
+    const payload = {};
+    if (data.status !== undefined) payload.status = normalizeStatus(data.status);
+    if (data.position !== undefined) payload.position = Number(data.position);
+    const response = await api.patch(`/api/tasks/${id}/`, payload);
+    return response.data ? mapTaskFromApi(response.data) : null;
   },
 
   getCompletionTime: async () => {

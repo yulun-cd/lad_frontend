@@ -5,6 +5,10 @@ import '../styles/task-card.css'
 import '../styles/tags.css'
 
 function TaskCard({ task, onEdit, onDelete, showCompleteCheckbox = false, onMarkCompleted, tags = [], onTagChange, onTagsChange }) {
+  const handleCardClick = (e) => {
+    if (onEdit) onEdit()
+  }
+
   const displayTimestamp = task.updated_at || task.created_at
   const formattedTimestamp = displayTimestamp
     ? format(new Date(displayTimestamp), 'MMM dd, yyyy HH:mm')
@@ -16,16 +20,14 @@ function TaskCard({ task, onEdit, onDelete, showCompleteCheckbox = false, onMark
   }
 
   return (
-    <div className="task-card">
+    <div className="task-card task-card--clickable" onClick={handleCardClick}>
       <div className="task-layout">
         {showCompleteCheckbox && (
-          <div className="task-complete-slot">
+          <div className="task-complete-slot" onClick={(e) => e.stopPropagation()}>
             <input
               type="checkbox"
               className="task-complete-checkbox"
               aria-label="Mark task as completed"
-              onClick={(e) => e.stopPropagation()}
-              onMouseDown={(e) => e.stopPropagation()}
               onChange={(e) => {
                 if (e.target.checked && onMarkCompleted) {
                   onMarkCompleted()
@@ -59,29 +61,20 @@ function TaskCard({ task, onEdit, onDelete, showCompleteCheckbox = false, onMark
                   Energy: {task.energy_level}/5
                 </span>
                 {onTagChange && (
-                  <TagPicker
-                    tags={tags}
-                    value={task.tag}
-                    onChange={(tagId) => onTagChange(task.id, tagId)}
-                    onTagsChange={onTagsChange}
-                  />
+                  <div onClick={(e) => e.stopPropagation()}>
+                    <TagPicker
+                      tags={tags}
+                      value={task.tag}
+                      onChange={(tagId) => onTagChange(task.id, tagId)}
+                      onTagsChange={onTagsChange}
+                    />
+                  </div>
                 )}
               </div>
 
               <div className="task-actions">
                 <button
-                  onClick={onEdit}
-                  className="secondary icon-button"
-                  aria-label="Edit task"
-                  title="Edit task"
-                >
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                    <path d="M12 20h9" />
-                    <path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5Z" />
-                  </svg>
-                </button>
-                <button
-                  onClick={onDelete}
+                  onClick={(e) => { e.stopPropagation(); onDelete && onDelete() }}
                   className="secondary danger icon-button"
                   aria-label="Delete task"
                   title="Delete task"

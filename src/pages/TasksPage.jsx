@@ -87,6 +87,7 @@ function TasksPage() {
   const [showCompleted, setShowCompleted] = useState(false)
   const [draggedTaskId, setDraggedTaskId] = useState(null)
   const [dragOverStatus, setDragOverStatus] = useState(null)
+  const [dragOverTaskId, setDragOverTaskId] = useState(null)
   const [selectedTagIds, setSelectedTagIds] = useState([])
 
   useEffect(() => {
@@ -193,44 +194,159 @@ function TasksPage() {
   const handleDragEnd = () => {
     setDraggedTaskId(null)
     setDragOverStatus(null)
+    setDragOverTaskId(null)
   }
 
   const handleDragOverColumn = (e, status) => {
     e.preventDefault()
-    if (dragOverStatus !== status) {
-      setDragOverStatus(status)
-    }
+    setDragOverStatus(status)
+    setDragOverTaskId(null)
   }
 
-  const handleDropOnColumn = async (e, targetStatus) => {
+  const handleDragOverTask = (e, taskId, status) => {
     e.preventDefault()
+    e.stopPropagation()
+    setDragOverStatus(status)
+    setDragOverTaskId(taskId)
+  }
+
+  const handleDropOnTask = async (e, targetTaskId, columnStatus, columnTasks) => {
+    e.preventDefault()
+    e.stopPropagation()
     setDragOverStatus(null)
+    setDragOverTaskId(null)
 
-    if (!draggedTaskId) return
-
-    const draggedTask = tasks.find((task) => task.id === draggedTaskId)
-    if (!draggedTask || draggedTask.status === targetStatus) {
+    if (!draggedTaskId || draggedTaskId === targetTaskId) {
       setDraggedTaskId(null)
       return
     }
 
-    const previousTasks = tasks
-    setTasks((prev) => prev.map((task) => (
-      task.id === draggedTaskId ? { ...task, status: targetStatus } : task
-    )))
-    setDraggedTaskId(null)
+    const draggedTask = tasks.find((t) => t.id === draggedTaskId)
+    if (!draggedTask) { setDraggedTaskId(null); return }
 
-    try {
-      await tasksService.updateTask(draggedTaskId, { status: targetStatus })
-      await fetchTasks()
+    const targetIndex = columnTasks.findIndex((t) => t.id === targetTaskId)
+    const targetPosition = targetIndex + 1
 
-      if (targetStatus === 'COMPLETED') {
-        window.dispatchEvent(new CustomEvent('tasks:completed'))
+    if (draggedTask.status === columnStatus) {
+      // Same-column reorder
+      const previousTasks = tasks
+      const reordered = columnTasks.filter((t) => t.id !== draggedTaskId)
+      reordered.splice(targetIndex, 0, draggedTask)
+      const updatedPositions = reordered.map((t, i) => ({ ...t, position: i + 1 }))
+      setTasks((prev) => [
+        ...prev.filter((t) => t.status !== columnStatus),
+        ...updatedPositions,
+      ])
+      setDraggedTaskId(null)
+      try {
+        await tasksService.patchTask(draggedTaskId, { position: targetPosition })
+      } catch (err) {
+        setTasks(previousTasks)
+        setError('Failed to reorder task. Please try again.')
+        console.error('Error reordering task:', err)
       }
-    } catch (err) {
-      setTasks(previousTasks)
-      setError('Failed to move task. Please try again.')
-      console.error('Error moving task:', err)
+    } else {
+      // Cross-column: change status and position together
+      const previousTasks = tasks
+      setTasks((prev) => {
+        const movedTask = prev.find((t) => t.id === draggedTaskId)
+        if (!movedTask) return prev
+
+        const sourceStatus = movedTask.status
+        const sourceWithoutMoved = prev.filter((t) => !(t.id === draggedTaskId && t.status === sourceStatus))
+        const sourceReindexed = sourceWithoutMoved
+          .filter((t) => t.status === sourceStatus)
+          .map((t, i) => ({ ...t, position: i + 1 }))
+
+        const targetColumn = sourceWithoutMoved.filter((t) => t.status === columnStatus)
+        const beforeTarget = targetColumn.slice(0, targetIndex)
+        const afterTarget = targetColumn.slice(targetIndex)
+        const movedInTarget = [
+          ...beforeTarget,
+          { ...movedTask, status: columnStatus, position: targetPosition },
+          ...afterTarget,
+        ].map((t, i) => ({ ...t, position: i + 1 }))
+
+        const untouched = sourceWithoutMoved.filter((t) => t.status !== sourceStatus && t.status !== columnStatus)
+        return [...untouched, ...sourceReindexed, ...movedInTarget]
+      })
+      setDraggedTaskId(null)
+      try {
+        await tasksService.patchTask(draggedTaskId, { status: columnStatus, position: targetPosition })
+        await fetchTasks()
+        if (columnStatus === 'COMPLETED') {
+          window.dispatchEvent(new CustomEvent('tasks:completed'))
+        }
+      } catch (err) {
+        setTasks(previousTasks)
+        setError('Failed to move task. Please try again.')
+        console.error('Error moving task:', err)
+      }
+    }
+  }
+
+  const handleDropOnColumn = async (e, targetStatus, columnTasks) => {
+    e.preventDefault()
+    setDragOverStatus(null)
+    setDragOverTaskId(null)
+
+    if (!draggedTaskId) return
+
+    const draggedTask = tasks.find((t) => t.id === draggedTaskId)
+    if (!draggedTask) { setDraggedTaskId(null); return }
+
+    if (draggedTask.status === targetStatus) {
+      // Same-column: move to end
+      const otherTasks = columnTasks.filter((t) => t.id !== draggedTaskId)
+      const targetIndex = otherTasks.length
+      const targetPosition = targetIndex + 1
+      const previousTasks = tasks
+      const reordered = [...otherTasks, draggedTask].map((t, i) => ({ ...t, position: i + 1 }))
+      setTasks((prev) => [
+        ...prev.filter((t) => t.status !== targetStatus),
+        ...reordered,
+      ])
+      setDraggedTaskId(null)
+      try {
+        await tasksService.patchTask(draggedTaskId, { position: targetPosition })
+      } catch (err) {
+        setTasks(previousTasks)
+        setError('Failed to reorder task. Please try again.')
+        console.error('Error reordering task:', err)
+      }
+    } else {
+      // Cross-column: move to end and update status+position together
+      const targetPosition = columnTasks.length + 1
+      const previousTasks = tasks
+      setTasks((prev) => {
+        const movedTask = prev.find((t) => t.id === draggedTaskId)
+        if (!movedTask) return prev
+
+        const sourceStatus = movedTask.status
+        const sourceWithoutMoved = prev.filter((t) => !(t.id === draggedTaskId && t.status === sourceStatus))
+        const sourceReindexed = sourceWithoutMoved
+          .filter((t) => t.status === sourceStatus)
+          .map((t, i) => ({ ...t, position: i + 1 }))
+
+        const targetColumn = sourceWithoutMoved.filter((t) => t.status === targetStatus)
+        const movedInTarget = [...targetColumn, { ...movedTask, status: targetStatus }]
+          .map((t, i) => ({ ...t, position: i + 1 }))
+
+        const untouched = sourceWithoutMoved.filter((t) => t.status !== sourceStatus && t.status !== targetStatus)
+        return [...untouched, ...sourceReindexed, ...movedInTarget]
+      })
+      setDraggedTaskId(null)
+      try {
+        await tasksService.patchTask(draggedTaskId, { status: targetStatus, position: targetPosition })
+        await fetchTasks()
+        if (targetStatus === 'COMPLETED') {
+          window.dispatchEvent(new CustomEvent('tasks:completed'))
+        }
+      } catch (err) {
+        setTasks(previousTasks)
+        setError('Failed to move task. Please try again.')
+        console.error('Error moving task:', err)
+      }
     }
   }
 
@@ -242,21 +358,9 @@ function TasksPage() {
     return Math.max(createdValue, updatedValue)
   }
 
-  const sortByLatestTimestampDesc = (a, b) => (
-    latestTimestampValue(b) - latestTimestampValue(a)
-  )
-
-  const inProgressTasks = tasks
-    .filter((task) => task.status === 'IN_PROGRESS')
-    .sort(sortByLatestTimestampDesc)
-
-  const pendingTasks = tasks
-    .filter((task) => task.status === 'PENDING')
-    .sort(sortByLatestTimestampDesc)
-
-  const completedTasks = tasks
-    .filter((task) => task.status === 'COMPLETED')
-    .sort(sortByLatestTimestampDesc)
+  const inProgressTasks = tasks.filter((task) => task.status === 'IN_PROGRESS')
+  const pendingTasks = tasks.filter((task) => task.status === 'PENDING')
+  const completedTasks = tasks.filter((task) => task.status === 'COMPLETED')
 
   const columns = [
     { key: 'IN_PROGRESS', title: 'In Progress', tasks: inProgressTasks },
@@ -338,9 +442,9 @@ function TasksPage() {
         {columns.map((column) => (
           <section
             key={column.key}
-            className={`kanban-column status-${column.key.toLowerCase()} ${dragOverStatus === column.key ? 'drop-target' : ''}`}
+            className={`kanban-column status-${column.key.toLowerCase()} ${dragOverStatus === column.key && !dragOverTaskId ? 'drop-target' : ''}`}
             onDragOver={(e) => handleDragOverColumn(e, column.key)}
-            onDrop={(e) => handleDropOnColumn(e, column.key)}
+            onDrop={(e) => handleDropOnColumn(e, column.key, column.tasks)}
           >
             <div className="kanban-column-header">
               <h2>{column.title}</h2>
@@ -354,10 +458,12 @@ function TasksPage() {
                 column.tasks.map((task) => (
                   <div
                     key={task.id}
-                    className={`kanban-task-item ${draggedTaskId === task.id ? 'dragging' : ''}`}
+                    className={`kanban-task-item ${draggedTaskId === task.id ? 'dragging' : ''} ${dragOverTaskId === task.id ? 'drag-over' : ''}`}
                     draggable
                     onDragStart={(e) => handleDragStart(e, task.id)}
                     onDragEnd={handleDragEnd}
+                    onDragOver={(e) => handleDragOverTask(e, task.id, column.key)}
+                    onDrop={(e) => handleDropOnTask(e, task.id, column.key, column.tasks)}
                   >
                     <TaskCard
                       task={task}
